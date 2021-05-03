@@ -56,6 +56,10 @@ def predict_img(img):
     else:
         return str("Surprise")
 
+@app.route('/')
+def home():
+    return "<h1>Moodly API</h1><p>The API is listening is listening for an image in '/img'</p>"
+
 @app.route('/img', methods=['POST'])
 def parse_request():
     # reading the json file
