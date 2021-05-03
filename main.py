@@ -1,76 +1,15 @@
-# import cv2
+import base64
+import io
+from imageio import imread
+import cv2
 import numpy as np
-# import keras
-# from keras.models import Sequential
-# from keras.layers import Dense, Conv2D, MaxPool2D, Flatten, Dropout
-from flask import Flask, request
+import json
+import keras
+from keras.models import Sequential
+from keras.layers import Dense, Conv2D, MaxPool2D, Flatten, Dropout
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
-
-@app.route("/")
-def hello():
-    return "ESTO ES LO QUE TIENE QUE SERVIR"
-
-
-
-# app.post('/img', (req, res) => {
-#   res.header("Content-Type", "application/json");
-#   console.log(req.body)
-#   res.send(JSON.stringify({
-#     status: 200,
-#     emotion: 'happy'
-#   }))
-# })
-
-
-#request.get_data()
-
-@app.route('/img', methods=['POST'])
-def parse_request():
-    
-    data = request.data
-    p = np.array(data)
-    if (data == "yes"):
-        return str("YES")
-    elif (data == 2):
-        return str("NO")
-    else:
-        return str(p)
-    
-    # empty in some cases
-    # always need raw data here, not parsed form data
-
-app.run(debug=True)
-
-
-
-
-def predict_img(dir):
-    img = dir
-    new_img = cv2.resiz(img, (48,48))
-    new_img = np.expand_dims(new_img, axis=0)
-    new_img = new_img/255.0
-
-    predictions = model.predict(new_img)
-
-    if (np.argmax(predictions, axis=1) == 0):
-        return str("Angry")
-    elif (np.argmax(predictions, axis=1) == 1):
-        return str("Disgust")
-    elif (np.argmax(predictions, axis=1) == 2):
-        return str("Fear")
-    elif (np.argmax(predictions, axis=1) == 3):
-        return str("Happy")
-    elif (np.argmax(predictions, axis=1) == 4):
-        return str("Neutral")
-    elif (np.argmax(predictions, axis=1) == 5):
-        return str("Sad")
-    else:
-        return str("Surprise")
-
-
-
-
 
 def load_model():
     model = Sequential()
@@ -92,3 +31,52 @@ def load_model():
 
     return model
 
+model = load_model()
+
+# predicting feeling of img
+def predict_img(img):
+    new_img = cv2.resize(img, (48,48))
+    new_img = np.expand_dims(new_img, axis=0)
+    new_img = new_img/255.0
+
+    predictions = model.predict(new_img)
+
+    if (np.argmax(predictions, axis=1) == 0):
+        return str("Angry")
+    elif (np.argmax(predictions, axis=1) == 1):
+        return str("Disgust")
+    elif (np.argmax(predictions, axis=1) == 2):
+        return str("Fear")
+    elif (np.argmax(predictions, axis=1) == 3):
+        return str("Happy")
+    elif (np.argmax(predictions, axis=1) == 4):
+        return str("Neutral")
+    elif (np.argmax(predictions, axis=1) == 5):
+        return str("Sad")
+    else:
+        return str("Surprise")
+
+@app.route('/img', methods=['POST'])
+def parse_request():
+    # reading the json file
+    try:
+        obj = request.json
+        print('calculating feeling')
+        # convert base64 string to an numpy array
+        img = imread(io.BytesIO(base64.b64decode(obj['img'])))
+
+        # calculate the emotion of the image
+        emotion = predict_img(img)
+        print('feeling found: ', emotion)
+
+        return jsonify({
+            "status": 200,
+            "emotion": emotion
+        })
+    except:
+        return jsonify({
+            "message": "Something went wrong in the API"
+        })
+    
+
+app.run(debug=True)
