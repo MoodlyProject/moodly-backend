@@ -44,7 +44,7 @@ def predict_img(img):
     if (np.argmax(predictions, axis=1) == 0):
         return str("Angry")
     elif (np.argmax(predictions, axis=1) == 1):
-        return str("Disgust")
+        return str("Disgusted")
     elif (np.argmax(predictions, axis=1) == 2):
         return str("Fear")
     elif (np.argmax(predictions, axis=1) == 3):
@@ -54,7 +54,11 @@ def predict_img(img):
     elif (np.argmax(predictions, axis=1) == 5):
         return str("Sad")
     else:
-        return str("Surprise")
+        return str("Surprised")
+
+@app.route('/')
+def home():
+    return "<h1>Moodly API</h1><p>The API is listening is listening for an image in '/img'</p>"
 
 @app.route('/img', methods=['POST'])
 def parse_request():
@@ -79,4 +83,4 @@ def parse_request():
         })
     
 
-app.run(debug=True)
+app.run(host='0.0.0.0')
